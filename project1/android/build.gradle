@@ -1,0 +1,22 @@
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+        // This repository is required for Flutter artifacts.
+        maven { url 'https://storage.googleapis.com/download.flutter.io' }
+    }
+    dependencies {
+        // Use a compatible Android Gradle plugin version.
+        classpath 'com.android.tools.build:gradle:7.3.1'
+        // Ensure the Kotlin plugin version is available in mavenCentral or google().
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.22"
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        maven { url 'https://storage.googleapis.com/download.flutter.io' }
+    }
+}
