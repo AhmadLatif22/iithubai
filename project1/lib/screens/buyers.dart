@@ -4,6 +4,8 @@ import '../widgets/custom_button.dart';
 import '../widgets/custom_textfield.dart';
 
 class BuyersScreen extends StatefulWidget {
+  const BuyersScreen({super.key});
+
   @override
   _BuyersScreenState createState() => _BuyersScreenState();
 }
@@ -14,7 +16,7 @@ class _BuyersScreenState extends State<BuyersScreen> {
   final TextEditingController _pricePerCartonController = TextEditingController();
   final TextEditingController _pricePerContainerController = TextEditingController();
   final TextEditingController _numberOfContainersController = TextEditingController();
-  List<Buyer> _buyers = [];
+  final List<Buyer> _buyers = [];
 
   void _addBuyer() {
     final buyer = Buyer(
@@ -42,7 +44,7 @@ class _BuyersScreenState extends State<BuyersScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Buyers'),
+        title: const Text('Buyers'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -71,7 +73,7 @@ class _BuyersScreenState extends State<BuyersScreen> {
                 controller: _pricePerContainerController),
             CustomTextField(label: 'Number of Containers',
                 controller: _numberOfContainersController),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             CustomButton(
               text: 'Add Buyer',
               onPressed: _addBuyer,

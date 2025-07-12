@@ -10,10 +10,12 @@ import 'screens/profit.dart';
 import 'theme/theme.dart';
 
 void main() {
-  runApp(AlQamarCitrusApp());
+  runApp(const AlQamarCitrusApp());
 }
 
 class AlQamarCitrusApp extends StatelessWidget {
+  const AlQamarCitrusApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -21,15 +23,15 @@ class AlQamarCitrusApp extends StatelessWidget {
       theme: citrusTheme,
       initialRoute: '/',
       routes: {
-        '/': (context) => LoginScreen(), // Default to LoginScreen
-        '/login': (context) => LoginScreen(),
-        '/signup': (context) => SignupScreen(),
-        '/home': (context) => HomeScreen(),
-        '/employees': (context) => EmployeesScreen(),
-        '/sellers': (context) => SellersScreen(),
-        '/buyers': (context) => BuyersScreen(),
-        '/expenses': (context) => ExpensesScreen(),
-        '/profit': (context) => ProfitScreen(),
+        '/': (context) => const LoginScreen(), // Default to LoginScreen
+        '/login': (context) => const LoginScreen(),
+        '/signup': (context) => const SignupScreen(),
+        '/home': (context) => const HomeScreen(),
+        '/employees': (context) => const EmployeesScreen(),
+        '/sellers': (context) => const SellersScreen(),
+        '/buyers': (context) => const BuyersScreen(),
+        '/expenses': (context) => const ExpensesScreen(),
+        '/profit': (context) => const ProfitScreen(),
       },
     );
   }

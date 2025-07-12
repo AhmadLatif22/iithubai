@@ -12,8 +12,8 @@ class ContainerSized extends StatelessWidget {
       ),
       body: Center(
           child: Container(margin
-              : EdgeInsets.all(10),height: 70 ,width: 100,
-          decoration: BoxDecoration(color: Colors.lightBlue,
+              : const EdgeInsets.all(10),height: 70 ,width: 100,
+          decoration: const BoxDecoration(color: Colors.lightBlue,
               //shape: BoxShape.circle
               //borderRadius: BorderRadius.circular(2),
               borderRadius: BorderRadius.only(topLeft:  Radius.circular(12), bottomRight: Radius.circular(12)),
@@ -21,7 +21,7 @@ class ContainerSized extends StatelessWidget {
                 BoxShadow(blurRadius: 20,spreadRadius: 10,color: Colors.white)
               ]
           ),
-          child: Center(child: Container(margin:EdgeInsets.all(10),color: Colors.redAccent,)
+          child: Center(child: Container(margin:const EdgeInsets.all(10),color: Colors.redAccent,)
          // Text('Ahmad' , style: TextStyle(fontSize: 19))
           ))),
       //Center( child: SizedBox( height: 50, width: 50, child: Text('Hello'),),),

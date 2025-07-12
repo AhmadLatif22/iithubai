@@ -163,7 +163,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFF4E5FE8), Color(0xFFE9D7F6)],
+            colors: [
+              Color(0xFF0A0A0A), // Deep black
+              Color(0xFF1A1A2E), // Dark navy
+              Color(0xFF16213E),],
           ),
         ),
         child: SafeArea(
@@ -188,7 +191,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF6778E8),
+                              color: const Color(0xFF16213E),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Icon(
@@ -392,7 +395,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             child: ElevatedButton(
                               onPressed: isLoading ? null : _registerUser,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue,
+                                backgroundColor: const Color(0xFF16213E),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
                                 ),

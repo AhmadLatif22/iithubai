@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -5,7 +6,6 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_markdown/flutter_markdown.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -16,7 +16,7 @@ class AITutorChat extends StatefulWidget {
   final String? studentId;
 
   // Constructor with optional studentId parameter
-  const AITutorChat({Key? key, this.studentId}) : super(key: key);
+  const AITutorChat({super.key, this.studentId});
 
   @override
   _AITutorChatState createState() => _AITutorChatState();
@@ -70,7 +70,7 @@ class _AITutorChatState extends State<AITutorChat> {
       } else {
         // Fallback to anonymous ID if needed
         final prefs = await SharedPreferences.getInstance();
-        _studentId = prefs.getString('anonymous_user_id') ?? Uuid().v4();
+        _studentId = prefs.getString('anonymous_user_id') ?? const Uuid().v4();
         await prefs.setString('anonymous_user_id', _studentId!);
       }
     }
@@ -83,7 +83,7 @@ class _AITutorChatState extends State<AITutorChat> {
     // Create or retrieve existing conversation
     final prefs = await SharedPreferences.getInstance();
     String convPrefKey = 'current_conversation_id_$_studentId';
-    _conversationId = prefs.getString(convPrefKey) ?? Uuid().v4();
+    _conversationId = prefs.getString(convPrefKey) ?? const Uuid().v4();
     await prefs.setString(convPrefKey, _conversationId);
 
     // Load chat history
@@ -116,7 +116,7 @@ class _AITutorChatState extends State<AITutorChat> {
       });
 
       final snapshot = await _firestore
-          .collection('students')
+          .collection('users')
           .doc(_studentId)
           .collection('conversations')
           .doc(_conversationId)
@@ -153,7 +153,7 @@ class _AITutorChatState extends State<AITutorChat> {
   Future<void> _saveMessage(Map<String, String> message) async {
     try {
       await _firestore
-          .collection('students')
+          .collection('users')
           .doc(_studentId)
           .collection('conversations')
           .doc(_conversationId)
@@ -166,7 +166,7 @@ class _AITutorChatState extends State<AITutorChat> {
 
       // Also update conversation metadata
       await _firestore
-          .collection('students')
+          .collection('users')
           .doc(_studentId)
           .collection('conversations')
           .doc(_conversationId)
@@ -196,7 +196,7 @@ class _AITutorChatState extends State<AITutorChat> {
     final prefs = await SharedPreferences.getInstance();
     String convPrefKey = 'current_conversation_id_$_studentId';
     setState(() {
-      _conversationId = Uuid().v4();
+      _conversationId = const Uuid().v4();
       _messages = [
         {'sender': 'bot', 'message': 'Hi, I am AI Tutor! How can I help you today? 😊', 'timestamp': DateTime.now().toIso8601String()},
       ];
@@ -322,7 +322,7 @@ class _AITutorChatState extends State<AITutorChat> {
 
       // Here you would process the file content, possibly send it to the API
       // Currently this just acknowledges receipt, but doesn't process the file
-      Timer(Duration(milliseconds: 800), () async {
+      Timer(const Duration(milliseconds: 800), () async {
         final botMessage = {
           'sender': 'bot',
           'message': 'I received your file "$fileName". What would you like to know about it?',
@@ -349,26 +349,48 @@ class _AITutorChatState extends State<AITutorChat> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!isUser)
-            Padding(
-              padding: const EdgeInsets.only(right: 8.0),
+            const Padding(
+              padding: EdgeInsets.only(right: 8.0),
               child: CircleAvatar(
                 radius: 15,
-                backgroundColor: Colors.purple[300],
+                backgroundColor: Color(0xFF16213E),
                 child: Icon(Icons.smart_toy, size: 16, color: Colors.white),
               ),
             ),
           Flexible(
             child: Container(
-              padding: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-              margin: EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+              margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
               decoration: BoxDecoration(
-                color: isUser ? Colors.blue[100] : Colors.purple[100],
-                borderRadius: BorderRadius.circular(20),
+                color: isUser ?
+                const Color(0x0f180935) : const Color(0xFF16213E),
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(16),
+                  topRight: const Radius.circular(16),
+                  bottomLeft:
+                  isUser ? const Radius.circular(16) : const Radius.circular(0),
+                  bottomRight:
+                  isUser ? const Radius.circular(0) : const Radius.circular(16),
+                ),
               ),
               child: MarkdownBody(
                 data: message,
+                selectable: true,
                 styleSheet: MarkdownStyleSheet(
-                  p: TextStyle(color: Colors.black87, fontSize: 15),
+                  p: const TextStyle(color: Colors.white),
+                  h1: const TextStyle(color: Colors.white),
+                  h2: const TextStyle(color: Colors.white),
+                  h3: const TextStyle(color: Colors.white),
+                  h4: const TextStyle(color: Colors.white),
+                  h5: const TextStyle(color: Colors.white),
+                  h6: const TextStyle(color: Colors.white),
+                  code: const TextStyle(color: Colors.white),
+                  blockquote: const TextStyle(color: Colors.white),
+                  em: const TextStyle(color: Colors.white),
+                  strong: const TextStyle(color: Colors.white),
+                  listBullet: const TextStyle(color: Colors.white),
+                  tableHead: const TextStyle(color: Colors.white),
+                  tableBody: const TextStyle(color: Colors.white),
                 ),
               ),
             ),
@@ -377,6 +399,7 @@ class _AITutorChatState extends State<AITutorChat> {
       ),
     );
   }
+
 
   Widget _buildQuickReplies() {
     String semester = _studentSemester;
@@ -404,10 +427,10 @@ class _AITutorChatState extends State<AITutorChat> {
   Widget _quickReplyButton(String label) {
     return OutlinedButton(
       style: OutlinedButton.styleFrom(
-        shape: StadiumBorder(),
-        side: BorderSide(color: Colors.lightBlueAccent),
+        shape: const StadiumBorder(),
+        side: const BorderSide(color: Colors.lightBlueAccent),
       ),
-      child: Text(label, style: TextStyle(color: Colors.blue)),
+      child: Text(label, style: const TextStyle(color: Colors.blue)),
       onPressed: () => _sendMessage(label),
     );
   }
@@ -417,126 +440,138 @@ class _AITutorChatState extends State<AITutorChat> {
     String welcomeTitle = _studentName.isEmpty ? 'AI Tutor' : 'AI Tutor ';
 
     return Scaffold(
-      backgroundColor: Color(0xFFF7F8FA),
       appBar: AppBar(
-        backgroundColor: Colors.purple[100],
-        title: Text(welcomeTitle),
+        backgroundColor: const Color(0xFF0A0A0A),
+        title: Text(welcomeTitle,style: const TextStyle(color: Colors.white),),
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Container(
-            decoration: BoxDecoration(
-              color: Colors.purple[300],
+            decoration: const BoxDecoration(
+              color:Color(0xFF16213E),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.smart_toy, size: 16, color: Colors.white),
+            child: const Icon(Icons.smart_toy, size: 16, color: Colors.white),
           ),
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.chat_bubble_outline),
+            icon: const Icon(Icons.chat_bubble_outline),
             onPressed: () {
               // Show past conversations for this student
               _showConversationsDialog();
             },
           ),
           IconButton(
-            icon: Icon(Icons.add),
+            icon: const Icon(Icons.add),
             onPressed: _startNewConversation,
           ),
         ],
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            if (_isLoadingHistory)
-              LinearProgressIndicator(
-                backgroundColor: Colors.purple[100],
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.purple),
-              ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF0A0A0A), // Deep black
+              Color(0xFF1A1A2E), // Dark navy
+              Color(0xFF16213E), // Darker blue
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              if (_isLoadingHistory)
+                const LinearProgressIndicator(
+                  backgroundColor: Color(0xFF0A0A0A),
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF0A0A0A)),
+                ),
 
-            Expanded(
-              child: ListView.builder(
-                padding: EdgeInsets.only(top: 10),
-                itemCount: _messages.length + (_isLoading ? 1 : 0),
-                itemBuilder: (context, index) {
-                  if (index == _messages.length && _isLoading) {
-                    // Show typing indicator when loading
-                    return Align(
-                      alignment: Alignment.centerLeft,
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 16.0, top: 8.0),
-                        child: Container(
-                          padding: EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.purple[50],
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.purple),
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.only(top: 10),
+                  itemCount: _messages.length + (_isLoading ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index == _messages.length && _isLoading) {
+                      // Show typing indicator when loading
+                      return Align(
+                        alignment: Alignment.centerLeft,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 16.0, top: 8.0),
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF16213E),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Color(0xFF16213E),),
+                                  ),
                                 ),
-                              ),
-                              SizedBox(width: 8),
-                              Text("Thinking...", style: TextStyle(color: Colors.purple[700])),
-                            ],
+                                SizedBox(width: 8),
+                                Text("Thinking...", style: TextStyle(color: Colors.white)),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    );
-                  }
-                  final msg = _messages[index];
-                  return _buildMessage(msg['sender']!, msg['message']!);
-                },
+                      );
+                    }
+                    final msg = _messages[index];
+                    return _buildMessage(msg['sender']!, msg['message']!);
+                  },
+                ),
               ),
-            ),
 
-            if (_messages.length == 1) _buildQuickReplies(),
+              if (_messages.length == 1) _buildQuickReplies(),
 
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.attach_file, color: Colors.blueGrey),
-                    onPressed: _pickFile,
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      _isListening ? Icons.mic : Icons.mic_none,
-                      color: Colors.purple,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.attach_file, color: Colors.white),
+                      onPressed: _pickFile,
                     ),
-                    onPressed: _isListening ? _stopListening : _startListening,
-                  ),
-                  Expanded(
-                    child: TextField(
-                      controller: _controller,
-                      decoration: InputDecoration(
-                        hintText: 'Type your message...',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          borderSide: BorderSide(color: Colors.purple),
+                    IconButton(
+                      icon: Icon(
+                        _isListening ? Icons.mic : Icons.mic_none,
+                        color: Colors.white,
+                      ),
+                      onPressed: _isListening ? _stopListening : _startListening,
+                    ),
+                    Expanded(
+                      child: TextField(
+                        controller: _controller,
+                        decoration: InputDecoration(
+                          hintText: 'Type your message...',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            borderSide: const BorderSide(color: Color(0xFF16213E)),
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                         ),
-                        filled: true,
-                        fillColor: Colors.white,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16),
                       ),
                     ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.send, color: Colors.purpleAccent),
-                    onPressed: () => _sendMessage(_controller.text),
-                  ),
-                ],
+                    IconButton(
+                      icon: const Icon(Icons.send, color: Colors.white),
+                      onPressed: () => _sendMessage(_controller.text),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -545,18 +580,18 @@ class _AITutorChatState extends State<AITutorChat> {
   Future<void> _showConversationsDialog() async {
     try {
       final snapshot = await _firestore
-          .collection('students')
+          .collection('users')
           .doc(_studentId)
           .collection('conversations')
           .orderBy('lastUpdated', descending: true)
           .get();
 
-      if (!snapshot.docs.isEmpty) {
+      if (snapshot.docs.isNotEmpty) {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: Text('Your Conversations'),
-            content: Container(
+            title: const Text('Your Conversations'),
+            content: SizedBox(
               width: double.maxFinite,
               child: ListView.builder(
                 shrinkWrap: true,
@@ -590,7 +625,7 @@ class _AITutorChatState extends State<AITutorChat> {
             ),
             actions: [
               TextButton(
-                child: Text('Cancel'),
+                child: const Text('Cancel'),
                 onPressed: () => Navigator.pop(context),
               ),
             ],
@@ -598,13 +633,13 @@ class _AITutorChatState extends State<AITutorChat> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('No past conversations found'))
+            const SnackBar(content: Text('No past conversations found'))
         );
       }
     } catch (e) {
       print('Error loading conversations: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading conversations'))
+          const SnackBar(content: Text('Error loading conversations'))
       );
     }
   }

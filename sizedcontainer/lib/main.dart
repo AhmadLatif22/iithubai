@@ -1,23 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sizedcontainer/Widgets/alert.dart';
-import 'package:sizedcontainer/Widgets/animated_text.dart';
-import 'package:sizedcontainer/Widgets/bottomSheet.dart';
-import 'package:sizedcontainer/Widgets/bottomnav.dart';
-import 'package:sizedcontainer/Widgets/button.dart';
-import 'package:sizedcontainer/Widgets/dismissible.dart';
-import 'package:sizedcontainer/Widgets/drawer.dart';
-import 'package:sizedcontainer/Widgets/dropdownlist.dart';
-import 'package:sizedcontainer/Widgets/form.dart';
-import 'package:sizedcontainer/Widgets/forms.dart';
 import 'package:sizedcontainer/Widgets/imagePicker.dart';
-import 'package:sizedcontainer/Widgets/imageWidget.dart';
-import 'package:sizedcontainer/Widgets/list_grid.dart';
-import 'package:sizedcontainer/Widgets/rowscols.dart';
-import 'package:sizedcontainer/Widgets/snackBar.dart';
-import 'package:sizedcontainer/Widgets/stack.dart';
-import 'package:sizedcontainer/Widgets/tabbar.dart';
-import 'Widgets/container_sized.dart';
-import 'package:animated_text_kit/animated_text_kit.dart';
 
 void main() => runApp(const MyApp());
 

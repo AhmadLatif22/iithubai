@@ -4,7 +4,9 @@ import '../widgets/drawer.dart';
 class HomeScreen extends StatelessWidget {
   // Example values for income and expenses
   final double monthlyIncome = 1000000.0; // Replace with actual income source
-  final double monthlyExpenses = 500000.0; // Replace with actual expenses source
+  final double monthlyExpenses = 500000.0;
+
+  const HomeScreen({super.key}); // Replace with actual expenses source
 
   // Profit calculation logic
   double calculateProfit() {
@@ -17,9 +19,9 @@ class HomeScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Al-Qamar Citrus'),
+        title: const Text('Al-Qamar Citrus'),
       ),
-      drawer: AppDrawer(),
+      drawer: const AppDrawer(),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -31,23 +33,23 @@ class HomeScreen extends StatelessWidget {
               height: 200, // Adjust the height as needed
               fit: BoxFit.cover, // Adjust the fit as needed
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Text(
               'Monthly Profit:',
               style: Theme.of(context).textTheme.headlineLarge,
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Text(
               'PKR ${profit.toStringAsFixed(2)}',
               style: Theme.of(context).textTheme.headlineLarge,
             ),
-            SizedBox(height: 40),
+            const SizedBox(height: 40),
             // Additional financial breakdown
             Text(
               'Income: PKR ${monthlyIncome.toStringAsFixed(2)}',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Text(
               'Expenses: PKR ${monthlyExpenses.toStringAsFixed(2)}',
               style: Theme.of(context).textTheme.headlineSmall,

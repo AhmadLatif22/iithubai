@@ -20,8 +20,8 @@ class _DrawerWidgetState extends State<DrawerWidget> {
             children: [
               DrawerHeader(
                 child: Container(
-                  padding: EdgeInsets.all(10),
-                  child: Row(
+                  padding: const EdgeInsets.all(10),
+                  child: const Row(
                     children: [
                       CircleAvatar(
                         radius: 50,
@@ -45,32 +45,32 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                   ),
                 ),
               ),
-              ListTile(
+              const ListTile(
                 leading: Icon(Icons.person),
                 title: Text('Profile'),
               ),
-              ListTile(
+              const ListTile(
                 leading: Icon(Icons.folder),
                 title: Text('Files'),
               ),
-              ListTile(
+              const ListTile(
                 leading: Icon(Icons.group),
                 title: Text('Shared With Me'),
               ),
-              ListTile(
+              const ListTile(
                 leading: Icon(Icons.delete),
                 title: Text('Trash'),
               ),
-              ListTile(
+              const ListTile(
                 leading: Icon(Icons.upload),
                 title: Text('Uploads'),
               ),
-              Divider(),
-              ListTile(
+              const Divider(),
+              const ListTile(
                 leading: Icon(Icons.share),
                 title: Text('Share'),
               ),
-              ListTile(
+              const ListTile(
                 leading: Icon(Icons.logout),
                 title: Text('Logout'),
               ),
@@ -80,7 +80,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
       ),
       appBar: AppBar(
         backgroundColor: Colors.deepPurple, // Changed to maroon color
-        title: Text('Drawer'),
+        title: const Text('Drawer'),
       ),
       body: Center(
         child: Column(
@@ -94,7 +94,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                 height: 250,
                 width: 300,
                 decoration: BoxDecoration(
-                  boxShadow: [
+                  boxShadow: const [
                     BoxShadow(
                       blurRadius: 10,
                       color: Colors.black26,
@@ -103,16 +103,16 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                   ],
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(10),
-                  image: DecorationImage(
+                  image: const DecorationImage(
                     image: AssetImage('assets/sigma.jpg'),
                     fit: BoxFit.fill,
                   ),
                 ),
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             ElevatedButton(
-              child: Text('Show Alert'),
+              child: const Text('Show Alert'),
               onPressed: () {
                 _showMyDialog(context);
               },
@@ -133,8 +133,8 @@ class _DrawerWidgetState extends State<DrawerWidget> {
             borderRadius: BorderRadius.circular(10),
           ),
           elevation: 0,
-          title: Text('Heloooo'),
-          content: SingleChildScrollView(
+          title: const Text('Heloooo'),
+          content: const SingleChildScrollView(
             child: ListBody(
               children: [
                 Text('this is a demo'),
@@ -147,16 +147,16 @@ class _DrawerWidgetState extends State<DrawerWidget> {
               onPressed: () {
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Approved!')),
+                  const SnackBar(content: Text('Approved!')),
                 );
               },
-              child: Text('Approve'),
+              child: const Text('Approve'),
             ),
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
             ),
           ],
         );

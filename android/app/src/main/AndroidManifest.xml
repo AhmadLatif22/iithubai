@@ -6,7 +6,7 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 
     <application
-        android:label="project"
+        android:label="IIT Hub"
         android:icon="@mipmap/ic_launcher"
         tools:ignore="MissingClass">
         <activity

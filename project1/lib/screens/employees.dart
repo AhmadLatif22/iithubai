@@ -4,6 +4,8 @@ import '../widgets/custom_button.dart';
 import '../widgets/custom_textfield.dart';
 
 class EmployeesScreen extends StatefulWidget {
+  const EmployeesScreen({super.key});
+
   @override
   _EmployeesScreenState createState() => _EmployeesScreenState();
 }
@@ -14,7 +16,7 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
   final TextEditingController _designationController = TextEditingController();
   final TextEditingController _salaryController = TextEditingController();
   final TextEditingController _attendanceController = TextEditingController();
-  List<Employee> _employees = [];
+  final List<Employee> _employees = [];
 
   void _addEmployee() {
     final employee = Employee(
@@ -42,7 +44,7 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Employees'),
+        title: const Text('Employees'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -84,7 +86,7 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
               controller: _attendanceController,
               keyboardType: TextInputType.number,
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             CustomButton(
               text: 'Add Employee',
               onPressed: _addEmployee,

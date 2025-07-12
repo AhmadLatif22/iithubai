@@ -3,6 +3,8 @@ import '../widgets/custom_button.dart';
 import '../widgets/custom_textfield.dart';
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
@@ -24,7 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Login'),
+        title: const Text('Login'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -32,13 +34,13 @@ class _LoginScreenState extends State<LoginScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             CustomTextField(label: 'Email', controller: _emailController),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             CustomTextField(
               label: 'Password',
               controller: _passwordController,
               obscureText: true,
             ),
-            SizedBox(height: 32),
+            const SizedBox(height: 32),
             CustomButton(
               text: 'Login',
               onPressed: () {
@@ -49,7 +51,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Navigator.pushReplacementNamed(context, '/home');
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
+                    const SnackBar(
                       content: Text('Invalid email or password'),
                       backgroundColor: Colors.red,
                     ),
@@ -57,12 +59,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 }
               },
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             TextButton(
               onPressed: () {
                 Navigator.pushNamed(context, '/signup');
               },
-              child: Text('Don\'t have an account? Sign up here.'),
+              child: const Text('Don\'t have an account? Sign up here.'),
             ),
           ],
         ),

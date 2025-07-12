@@ -7,7 +7,7 @@ class SnackBarWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Snack Bar'),
+        title: const Text('Snack Bar'),
       ),
       body: Container(
       child: Center(
@@ -19,16 +19,16 @@ class SnackBarWidget extends StatelessWidget {
               onPressed: (){},
             ),
               backgroundColor: Colors.white,
-              padding: EdgeInsets.all(5),
+              padding: const EdgeInsets.all(5),
               shape: RoundedRectangleBorder(
                  borderRadius: BorderRadius.circular(20)
               ),
               behavior: SnackBarBehavior.floating,
               duration: const Duration(milliseconds: 3000),
-              content: Text('This is an error!!!!'));
+              content: const Text('This is an error!!!!'));
           ScaffoldMessenger.of(context).showSnackBar(snackBar);
         },
-          child: Text('Show Snack Bar'),),
+          child: const Text('Show Snack Bar'),),
       ),
       ),
     );

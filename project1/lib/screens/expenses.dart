@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import '../models/expense.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_textfield.dart';
 
 class ExpensesScreen extends StatefulWidget {
+  const ExpensesScreen({super.key});
+
   @override
   _ExpensesScreenState createState() => _ExpensesScreenState();
 }
@@ -25,7 +26,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
   void _showSuccessMessage() {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Expenses calculated successfully')),
+      const SnackBar(content: Text('Expenses calculated successfully')),
     );
   }
 
@@ -33,7 +34,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Expenses'),
+        title: const Text('Expenses'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -44,29 +45,29 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               controller: _electricityController,
               keyboardType: TextInputType.number,
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             CustomTextField(
               label: 'Cargo Expenses',
               controller: _cargoController,
               keyboardType: TextInputType.number,
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             CustomTextField(
               label: 'Labor Expenses',
               controller: _laborController,
               keyboardType: TextInputType.number,
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             CustomButton(
               text: 'Calculate Expenses',
               onPressed: _calculateExpenses,
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Text(
               'Total Expenses: PKR ${_totalExpenses.toStringAsFixed(2)}',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             CustomButton(
               text: 'Save Expenses',
               onPressed: _showSuccessMessage,

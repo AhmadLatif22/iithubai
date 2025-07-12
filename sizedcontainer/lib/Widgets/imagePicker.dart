@@ -49,8 +49,8 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
             ),
             ElevatedButton(
               onPressed: () async {
-                final List<XFile>? photos = await _picker.pickMultiImage();
-                if (photos != null && photos.isNotEmpty) {
+                final List<XFile> photos = await _picker.pickMultiImage();
+                if (photos.isNotEmpty) {
                   setState(() {
                     files = photos;
                   });

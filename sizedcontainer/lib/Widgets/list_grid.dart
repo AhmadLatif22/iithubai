@@ -17,7 +17,7 @@ class _ListGridState extends State<ListGrid> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('List and Grid'),
+        title: const Text('List and Grid'),
         backgroundColor: Colors.redAccent,
         elevation: 6,
       ),
@@ -61,7 +61,7 @@ class _ListGridState extends State<ListGrid> {
         // ),
         child: GridView.builder(
             itemCount: fruits.length,
-            gridDelegate:  SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
+            gridDelegate:  const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
             itemBuilder: (Context,index){
               return Card(
               child: Center(child: Text(fruits[index]),

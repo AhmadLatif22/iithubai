@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class DismissibleWidget extends StatefulWidget {
-  const DismissibleWidget({Key? key}) : super(key: key);
+  const DismissibleWidget({super.key});
 
   @override
   State<DismissibleWidget> createState() => _DismissibleWidgetState();
@@ -14,7 +14,7 @@ class _DismissibleWidgetState extends State<DismissibleWidget> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Dismissible'),
+        title: const Text('Dismissible'),
       ),
       body: ListView.builder(
         itemCount: languages.length,

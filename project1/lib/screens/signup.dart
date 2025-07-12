@@ -3,6 +3,8 @@ import '../widgets/custom_button.dart';
 import '../widgets/custom_textfield.dart';
 
 class SignupScreen extends StatefulWidget {
+  const SignupScreen({super.key});
+
   @override
   _SignupScreenState createState() => _SignupScreenState();
 }
@@ -22,7 +24,7 @@ class _SignupScreenState extends State<SignupScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Sign Up'),
+        title: const Text('Sign Up'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -30,13 +32,13 @@ class _SignupScreenState extends State<SignupScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             CustomTextField(label: 'Email', controller: _emailController),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             CustomTextField(
               label: 'Password',
               controller: _passwordController,
               obscureText: true,
             ),
-            SizedBox(height: 32),
+            const SizedBox(height: 32),
             CustomButton(
               text: 'Sign Up',
               onPressed: () {
@@ -47,7 +49,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   Navigator.pushReplacementNamed(context, '/home');
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
+                    const SnackBar(
                       content: Text('Please enter valid email and password'),
                       backgroundColor: Colors.red,
                     ),
@@ -55,12 +57,12 @@ class _SignupScreenState extends State<SignupScreen> {
                 }
               },
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             TextButton(
               onPressed: () {
                 Navigator.pushNamed(context, '/login');
               },
-              child: Text('Already have an account? Login here.'),
+              child: const Text('Already have an account? Login here.'),
             ),
           ],
         ),

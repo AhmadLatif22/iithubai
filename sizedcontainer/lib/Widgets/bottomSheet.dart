@@ -7,7 +7,7 @@ class BottomsheetWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Bottom Sheet',
           style: TextStyle(
             color: Colors.black,
@@ -23,7 +23,7 @@ class BottomsheetWidget extends StatelessWidget {
             // backgroundColor: Colors.purple, // Button color
             foregroundColor: Colors.black,  // Text color
           ),
-          child: Text(
+          child: const Text(
             'Bottom Sheet',
             style: TextStyle(
               color: Colors.black,
@@ -35,12 +35,12 @@ class BottomsheetWidget extends StatelessWidget {
               elevation: 0,
               isDismissible: false,
               enableDrag: true,
-              shape: RoundedRectangleBorder(
+              shape: const RoundedRectangleBorder(
                 borderRadius: BorderRadius.only(topLeft: Radius.circular(10),topRight: Radius.circular(10))
               ),
                 backgroundColor: Theme.of(context).primaryColor,
                 context: context , builder: (context){
-                  return Column(
+                  return const Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                     ListTile(title: Text('Hey Ahmad!!!!'),subtitle: Text('Welcome Here'),),

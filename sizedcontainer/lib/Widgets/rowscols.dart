@@ -9,7 +9,7 @@ class RowsCols extends StatelessWidget {
     var h=MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: AppBar(
-        title: Text('rows and columns '),
+        title: const Text('rows and columns '),
       ),
       body: Container(
         height: h,

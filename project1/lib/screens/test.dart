@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class TestImageScreen extends StatelessWidget {
+  const TestImageScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -12,12 +14,12 @@ class TestImageScreen extends StatelessWidget {
           'https://images.app.goo.gl/LdH3hVvexs7DYoSL9', // Replace with your image URL
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
-            return Column(
+            return const Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.error, color: Colors.red, size: 50),
-                const SizedBox(height: 10),
-                const Text('Failed to load image'),
+                SizedBox(height: 10),
+                Text('Failed to load image'),
               ],
             );
           },

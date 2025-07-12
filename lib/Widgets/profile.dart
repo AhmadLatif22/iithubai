@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:math' show min;
+
+import 'package:project/Widgets/login.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -19,73 +23,132 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String? _errorMessage;
   String? _userRollNumber;
 
+  Future<void> logout() async {
+    try {
+      // Sign out from Firebase Auth
+      await _auth.signOut();
+
+      // Clear only isLoggedIn flag but keep the roll number
+      // This way user credentials are preserved but they're technically logged out
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('isLoggedIn', false);
+
+      // Navigate back to login screen
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const SignInScreen()),
+      );
+    } catch (e) {
+      print('Error during logout: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error logging out: $e')),
+      );
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-    // Use addPostFrameCallback to ensure the context is ready
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadUserData();
+
+    // Add auth state listener to reload data when auth state changes
+    _auth.authStateChanges().listen((User? user) {
+      if (user != null) {
+        debugPrint('Auth state changed: User logged in - ${user.email}');
+        // Small delay to ensure auth is fully initialized
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) _loadUserData();
+        });
+      } else {
+        debugPrint('Auth state changed: User logged out');
+      }
     });
+
+    // Initial load
+    _loadUserData();
   }
 
   Future<void> _loadUserData() async {
+    if (!mounted) return;
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
     try {
+      // Increase the delay to ensure Firebase Auth is fully initialized
+      await Future.delayed(const Duration(milliseconds: 1000));
+
       // Get current user
       final User? user = _auth.currentUser;
 
-      if (user != null) {
+      // Add debug output to help diagnose the issue
+      debugPrint('Current user: ${user?.uid}, Email: ${user?.email}');
+
+      if (user != null && user.email != null) {
         // Extract roll number from email (email format is rollNumber@iit.com)
         final String rollNumber = user.email!.split('@')[0];
         _userRollNumber = rollNumber;
+
+        // Log for debugging
+        debugPrint('Loading data for user: $rollNumber');
 
         // Fetch user data from Firestore
         final DocumentSnapshot userDoc =
         await _firestore.collection('users').doc(rollNumber).get();
 
-        if (userDoc.exists) {
-          final data = userDoc.data() as Map<String, dynamic>;
-          setState(() {
-            _userData = data;
+        if (mounted) {  // Check if widget is still mounted before updating state
+          if (userDoc.exists) {
+            final data = userDoc.data() as Map<String, dynamic>;
+            debugPrint('User data loaded successfully: ${data.toString().substring(0, min(100, data.toString().length))}');
 
-            // Extract courses
-            if (data.containsKey('courses') && data['courses'] is List) {
-              _courses = List<Map<String, dynamic>>.from(data['courses']);
-            }
+            setState(() {
+              _userData = data;
 
-            _isLoading = false;
-          });
-        } else {
-          setState(() {
-            _isLoading = false;
-            _errorMessage = 'User data not found';
-          });
-          _showErrorSnackBar('User data not found');
+              // Extract courses
+              if (data.containsKey('courses') && data['courses'] is List) {
+                _courses = List<Map<String, dynamic>>.from(data['courses']);
+              }
+
+              _isLoading = false;
+            });
+          } else {
+            debugPrint('User document does not exist for: $rollNumber');
+            setState(() {
+              _isLoading = false;
+              _errorMessage = 'User data not found';
+            });
+            _showErrorSnackBar('User document not found for roll number: $rollNumber');
+          }
         }
       } else {
-        setState(() {
-          _isLoading = false;
-          _errorMessage = 'User not authenticated';
-        });
-        _showErrorSnackBar('User not authenticated');
+        debugPrint('No user is currently signed in or email is null');
+        if (mounted) {  // Check if widget is still mounted
+          setState(() {
+            _isLoading = false;
+            _errorMessage = 'User not authenticated';
+          });
+          _showErrorSnackBar('User not authenticated. Please sign out and sign in again.');
+        }
       }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = 'Error loading profile: $e';
-      });
-      _showErrorSnackBar('Error loading profile: $e');
+      debugPrint('Error loading user data: $e');
+      if (mounted) {  // Check if widget is still mounted
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Error loading profile: $e';
+        });
+        _showErrorSnackBar('Error loading profile: $e');
+      }
     }
   }
 
   void _showErrorSnackBar(String message) {
-    // This is now safe because we're using addPostFrameCallback in initState
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red[700],
+      ),
     );
   }
 
@@ -93,7 +156,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: Colors.green,
+        backgroundColor: Colors.purple[700],
       ),
     );
   }
@@ -123,10 +186,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return;
       }
 
-      setState(() {
-        _isLoading = true;
-      });
-
+      // Remove loading state for adding courses
       try {
         // Add course to local state
         setState(() {
@@ -138,15 +198,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           'courses': _courses,
         });
 
-        setState(() {
-          _isLoading = false;
-        });
-
         _showSuccessSnackBar('Course added successfully');
       } catch (e) {
+        // Remove course from local state if update failed
         setState(() {
-          _isLoading = false;
-          // Remove course from local state if update failed
           _courses.removeWhere((course) => course['code'] == selectedCourse['code']);
         });
         _showErrorSnackBar('Failed to add course: $e');
@@ -163,16 +218,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Remove Course'),
-          content: Text('Are you sure you want to remove ${course['name']}?'),
+          backgroundColor: Colors.grey[800],
+          title: const Text('Remove Course', style: TextStyle(color: Colors.white)),
+          content: Text(
+            'Are you sure you want to remove ${course['name']}?',
+            style: const TextStyle(color: Colors.white70),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
+              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Remove'),
+              child: const Text('Remove', style: TextStyle(color: Colors.red)),
             ),
           ],
         );
@@ -181,10 +240,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (confirm != true) return;
 
-    setState(() {
-      _isLoading = true;
-    });
-
+    // Remove loading state for removing courses
     try {
       // Remove course from local state
       setState(() {
@@ -194,10 +250,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       // Update in Firestore
       await _firestore.collection('users').doc(_userRollNumber).update({
         'courses': _courses,
-      });
-
-      setState(() {
-        _isLoading = false;
       });
 
       _showSuccessSnackBar('Course removed successfully');
@@ -305,7 +357,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Select Course to Add'),
+          backgroundColor: Colors.grey[800],
+          title: const Text('Select Course to Add', style: TextStyle(color: Colors.white)),
           content: SizedBox(
             width: double.maxFinite,
             child: ListView.builder(
@@ -327,20 +380,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
+                          color: Colors.white,
                         ),
                       ),
                     ),
                     ...semesterCourses.map((course) {
-                      return ListTile(
-                        title: Text(course['name']),
-                        subtitle: Text('${course['code']} - ${course['creditHours']} Credits'),
-                        trailing: Text(course['category']),
-                        onTap: () {
-                          Navigator.of(context).pop(course);
-                        },
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[700],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: ListTile(
+                          title: Text(
+                            course['name'],
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                          subtitle: Text(
+                            '${course['code']} - ${course['creditHours']} Credits',
+                            style: const TextStyle(color: Colors.white70),
+                          ),
+                          trailing: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: _getCategoryColor(course['category']),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              course['category'],
+                              style: const TextStyle(color: Colors.white, fontSize: 12),
+                            ),
+                          ),
+                          onTap: () {
+                            Navigator.of(context).pop(course);
+                          },
+                        ),
                       );
-                    }).toList(),
-                    const Divider(),
+                    }),
+                    const SizedBox(height: 16),
                   ],
                 );
               },
@@ -349,7 +426,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(null),
-              child: const Text('Cancel'),
+              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
             ),
           ],
         );
@@ -360,264 +437,515 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Profile'),
-        backgroundColor: const Color(0xFF4E5FE8),
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await _auth.signOut();
-              // Navigate to login screen after sign out
-              if (mounted) {
-                Navigator.of(context).pushReplacementNamed('/login');
-              }
-            },
+      body: Container(
+        // Add the gradient background
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF0A0A0A), // Deep black
+              Color(0xFF1A1A2E), // Dark navy
+              Color(0xFF16213E), // Darker blue
+            ],
           ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addCourse,
-        backgroundColor: const Color(0xFF4E5FE8),
-        child: const Icon(Icons.add),
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _userData == null
-          ? const Center(child: Text('No profile data available'))
-          : SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Profile Header
-            Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFF4E5FE8), Color(0xFFE9D7F6)],
-                ),
-              ),
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                children: [
-                  const CircleAvatar(
-                    radius: 50,
-                    backgroundColor: Colors.white70,
-                    child: Icon(
-                      Icons.person,
-                      size: 60,
-                      color: Color(0xFF4E5FE8),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    '${_userData!['firstName']} ${_userData!['lastName']}',
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _userData!['email'] ?? 'No email',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white30,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      'Semester ${_userData!['semester']}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+        ),
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator(color: Colors.purple))
+            : _userData == null
+            ? const Center(child: Text('No profile data available', style: TextStyle(color: Colors.white)))
+            : SafeArea(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Top Bar with Back Button and Logout
+                Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.2),
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Personal Information
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 24, 16, 8),
-              child: Text(
-                'Personal Information',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1A1E2C),
-                ),
-              ),
-            ),
-            Card(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                    _buildInfoRow('First Name', _userData!['firstName'] ?? 'N/A'),
-                    const Divider(),
-                    _buildInfoRow('Last Name', _userData!['lastName'] ?? 'N/A'),
-                    const Divider(),
-                    _buildInfoRow('Roll Number', _userData!['email']?.split('@')[0] ?? 'N/A'),
-                    const Divider(),
-                    _buildInfoRow('Current Semester', _userData!['semester'] ?? 'N/A'),
-                  ],
-                ),
-              ),
-            ),
-
-            // Courses Information
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Enrolled Courses',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1A1E2C),
-                    ),
-                  ),
-                  Text(
-                    'Total: ${_calculateTotalCreditHours()} Credit Hours',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF6B6B6B),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Course List
-            _courses.isEmpty
-                ? Center(
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  children: [
-                    const Icon(
-                      Icons.book_outlined,
-                      size: 48,
-                      color: Colors.grey,
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'No courses enrolled yet',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                    const SizedBox(height: 8),
-                    TextButton(
-                      onPressed: _addCourse,
-                      child: const Text('Add Course'),
-                    ),
-                  ],
-                ),
-              ),
-            )
-                : ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: _courses.length,
-              itemBuilder: (context, index) {
-                final course = _courses[index];
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    title: Text(
-                      course['name'] ?? 'Unknown Course',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
+                      const Text(
+                        'My Profile',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 4),
-                        Text('Course Code: ${course['code'] ?? 'N/A'}'),
-                        Text('Credit Hours: ${course['creditHours']?.toString() ?? 'N/A'}'),
-                        Text('Type: ${course['type'] ?? 'N/A'}'),
-                        Text('Category: ${course['category'] ?? 'N/A'}'),
+                      GestureDetector(
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              backgroundColor: Colors.grey[800],
+                              title: const Text("Logout", style: TextStyle(color: Colors.white)),
+                              content: const Text("Are you sure you want to logout?", style: TextStyle(color: Colors.white70)),
+                              actions: [
+                                TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text("No", style: TextStyle(color: Colors.grey))
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.pop(context); // Close the dialog first
+                                    logout(); // Call the logout method
+                                  },
+                                  child: const Text("Yes", style: TextStyle(color: Colors.red)),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.red.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.red.withOpacity(0.3),
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.logout,
+                            color: Colors.red,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Profile Header
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.all(24.0),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.grey[900]!.withOpacity(0.9),
+                        Colors.grey[800]!.withOpacity(0.8),
                       ],
                     ),
-                    leading: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: _getCategoryColor(course['category']),
-                        borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colors.purple.withOpacity(0.3),
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.purple.withOpacity(0.2),
+                        blurRadius: 25,
+                        offset: const Offset(0, 10),
                       ),
-                      child: Center(
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      // Profile Avatar
+                      Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.purple.withOpacity(0.8),
+                              Colors.blue.withOpacity(0.8),
+                            ],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.purple.withOpacity(0.3),
+                              blurRadius: 30,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.person,
+                          size: 50,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        '${_userData!['firstName']} ${_userData!['lastName']}',
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          shadows: [
+                            Shadow(
+                              color: Colors.purple,
+                              blurRadius: 10,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        (_userData!['email'] ?? 'No email').split('@')[0],
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey[300],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.purple.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: Colors.purple.withOpacity(0.5),
+                          ),
+                        ),
                         child: Text(
-                          (course['code'] ?? 'XX').substring(0, 2),
+                          'Semester ${_userData!['semester']}',
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
-                    ),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete_outline, color: Colors.red),
-                      onPressed: () => _removeCourse(course),
-                    ),
+                    ],
                   ),
-                );
-              },
+                ),
+
+                const SizedBox(height: 24),
+
+                // Personal Information
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.grey[900]!.withOpacity(0.9),
+                        Colors.grey[800]!.withOpacity(0.8),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colors.purple.withOpacity(0.3),
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.purple.withOpacity(0.2),
+                        blurRadius: 25,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Personal Information',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildInfoRow('First Name', _userData!['firstName'] ?? 'N/A'),
+                      const SizedBox(height: 12),
+                      _buildInfoRow('Last Name', _userData!['lastName'] ?? 'N/A'),
+                      const SizedBox(height: 12),
+                      _buildInfoRow('Roll Number', _userData!['email']?.split('@')[0] ?? 'N/A'),
+                      const SizedBox(height: 12),
+                      _buildInfoRow('Current Semester', _userData!['semester']?.toString() ?? 'N/A'),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // Courses Information
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.grey[900]!.withOpacity(0.9),
+                        Colors.grey[800]!.withOpacity(0.8),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colors.purple.withOpacity(0.3),
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.purple.withOpacity(0.2),
+                        blurRadius: 25,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Enrolled Courses',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          Text(
+                            'Total: ${_calculateTotalCreditHours()} Credits',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[300],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Course List
+                      _courses.isEmpty
+                          ? Center(
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 20),
+                            Icon(
+                              Icons.book_outlined,
+                              size: 48,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No courses enrolled yet',
+                              style: TextStyle(color: Colors.grey[400]),
+                            ),
+                            const SizedBox(height: 16),
+                            GestureDetector(
+                              onTap: _addCourse,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: Colors.purple.withOpacity(0.3),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: Colors.purple.withOpacity(0.5),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Add Course',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                          : Column(
+                        children: [
+                          ..._courses.map((course) {
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[700],
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.grey[600]!,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  // Course Icon
+                                  Container(
+                                    width: 50,
+                                    height: 50,
+                                    decoration: BoxDecoration(
+                                      color: _getCategoryColor(course['category']),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        (course['code'] ?? 'XX').substring(0, 2),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  // Course Details
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          course['name'] ?? 'Unknown Course',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          '${course['code']} • ${course['creditHours']} Credits',
+                                          style: TextStyle(
+                                            color: Colors.grey[300],
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: _getCategoryColor(course['category']).withOpacity(0.2),
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: Text(
+                                            course['category'] ?? 'N/A',
+                                            style: TextStyle(
+                                              color: _getCategoryColor(course['category']),
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  // Delete Button
+                                  GestureDetector(
+                                    onTap: () => _removeCourse(course),
+                                    child: Container(
+                                      width: 36,
+                                      height: 36,
+                                      decoration: BoxDecoration(
+                                        color: Colors.red.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: const Icon(
+                                        Icons.delete_outline,
+                                        color: Colors.red,
+                                        size: 20,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
+                          const SizedBox(height: 16),
+                          // Add Course Button
+                          GestureDetector(
+                            onTap: _addCourse,
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              decoration: BoxDecoration(
+                                color: Colors.purple.withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.purple.withOpacity(0.5),
+                                ),
+                              ),
+                              child: const Center(
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.add, color: Colors.white),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Add Course',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+              ],
             ),
-            const SizedBox(height: 24),
-          ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildInfoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.grey[700],
+        borderRadius: BorderRadius.circular(8),
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             label,
-            style: const TextStyle(
-              color: Color(0xFF6B6B6B),
-              fontSize: 16,
+            style: TextStyle(
+              color: Colors.grey[300],
+              fontSize: 14,
             ),
           ),
           Text(
             value,
             style: const TextStyle(
-              color: Color(0xFF1A1E2C),
-              fontSize: 16,
+              color: Colors.white,
+              fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
           ),

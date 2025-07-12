@@ -13,11 +13,11 @@ class _ImageWidgetState extends State<ImageWidget> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.red.shade900,
-        title: Text('Image Widget'),
+        title: const Text('Image Widget'),
 
       ),
-      body: Center(
-        child: Container(
+      body: const Center(
+        child: SizedBox(
           height: 250,
           width: 300,
 

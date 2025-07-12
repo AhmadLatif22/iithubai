@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:project/Widgets/home.dart';
-import 'firebase_options.dart';
-import 'package:project/Widgets/login.dart';
+import 'package:project/Widgets/profile.dart';
 import 'package:project/Widgets/splash.dart';
+import 'package:project/modules/Courseselection.dart';
+import 'package:project/modules/mockinterviews.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,7 +14,6 @@ void main() async {
   }
   runApp(const MyApp());
 }
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -28,7 +27,7 @@ class MyApp extends StatelessWidget {
         brightness: Brightness.light,
         primarySwatch: Colors.deepPurple,
       ),
-      home: const SplashScreen(),
+      home:  const ProfileScreen(),
     );
   }
 }

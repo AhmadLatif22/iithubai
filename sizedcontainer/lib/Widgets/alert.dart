@@ -7,11 +7,11 @@ class AlertWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Alert!!!!'),
+        title: const Text('Alert!!!!'),
         backgroundColor: Theme.of(context).primaryColor,
       ),
       body: Center(
-        child: ElevatedButton(child: Text('Show Alert'),onPressed: (){
+        child: ElevatedButton(child: const Text('Show Alert'),onPressed: (){
           _showMyDialog(context);
         },),
     ),
@@ -27,8 +27,8 @@ Future<void> _showMyDialog(BuildContext context)async
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           elevation: 0,
           // scrollable: true,
-          title: Text('Heloooo'),
-          content: SingleChildScrollView (
+          title: const Text('Heloooo'),
+          content: const SingleChildScrollView (
             child: ListBody(
               children: [
                 Text('this is a demo'),
@@ -37,8 +37,8 @@ Future<void> _showMyDialog(BuildContext context)async
             ),
           ),
             actions: [
-              TextButton(onPressed: (){ Navigator.of(context).pop();}, child: Text('Approve')),
-              TextButton(onPressed: (){ Navigator.of(context).pop();}, child: Text('Cancel')),
+              TextButton(onPressed: (){ Navigator.of(context).pop();}, child: const Text('Approve')),
+              TextButton(onPressed: (){ Navigator.of(context).pop();}, child: const Text('Cancel')),
           ],
         );
       });

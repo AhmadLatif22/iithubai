@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 final ThemeData citrusTheme = ThemeData(
   colorScheme: ColorScheme.fromSwatch(
-    primarySwatch: MaterialColor(
+    primarySwatch: const MaterialColor(
       0xFFFFA726, // Orange as the primary swatch
       {
         50: Color(0xFFFFF3E0),

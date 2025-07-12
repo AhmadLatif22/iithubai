@@ -38,7 +38,7 @@ PageController pageController = PageController();
      // body: Center(child: widgets.elementAt(selectedIndex),),
       body: PageView(
         controller: pageController,
-        children: [
+        children: const [
           AlertWidget(),
           DismissibleWidget(),
           DrawerWidget(),

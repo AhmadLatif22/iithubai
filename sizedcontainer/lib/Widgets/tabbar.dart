@@ -11,8 +11,8 @@ class TabBarWidget extends StatelessWidget {
         child: Scaffold(
           appBar: AppBar(
             backgroundColor: Colors.teal,
-            title: Text('Whatsapp'),
-            bottom: TabBar(
+            title: const Text('Whatsapp'),
+            bottom: const TabBar(
                 indicatorColor: Colors.black,
                 automaticIndicatorColorAdjustment: true,
                 isScrollable: true,
@@ -24,10 +24,10 @@ class TabBarWidget extends StatelessWidget {
             ]),
           ),
           body: TabBarView(children: [
-            Container(child: Center(child: Text('Chats',style: TextStyle(fontSize: 30),),),),
-            Container(child: Center(child: Text('Status',style: TextStyle(fontSize: 30),),),),
-            Container(child: Center(child: Text('Community',style: TextStyle(fontSize: 30),),),),
-            Container(child: Center(child: Text('Calls',style: TextStyle(fontSize: 30),),),),
+            Container(child: const Center(child: Text('Chats',style: TextStyle(fontSize: 30),),),),
+            Container(child: const Center(child: Text('Status',style: TextStyle(fontSize: 30),),),),
+            Container(child: const Center(child: Text('Community',style: TextStyle(fontSize: 30),),),),
+            Container(child: const Center(child: Text('Calls',style: TextStyle(fontSize: 30),),),),
 
           ]),
     ));

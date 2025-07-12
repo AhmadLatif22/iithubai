@@ -4,6 +4,8 @@ import '../widgets/custom_button.dart';
 import '../widgets/custom_textfield.dart';
 
 class SellersScreen extends StatefulWidget {
+  const SellersScreen({super.key});
+
   @override
   _SellersScreenState createState() => _SellersScreenState();
 }
@@ -14,7 +16,7 @@ class _SellersScreenState extends State<SellersScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _rentRateController = TextEditingController();
   final TextEditingController _numberOfTrolleysController = TextEditingController();
-  List<Seller> _sellers = [];
+  final List<Seller> _sellers = [];
 
   void _addSeller() {
     final seller = Seller(
@@ -42,7 +44,7 @@ class _SellersScreenState extends State<SellersScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Sellers'),
+        title: const Text('Sellers'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -66,7 +68,7 @@ class _SellersScreenState extends State<SellersScreen> {
             CustomTextField(label: 'Phone', controller: _phoneController),
             CustomTextField(label: 'Rent Rate', controller: _rentRateController),
             CustomTextField(label: 'Number of Trolleys', controller: _numberOfTrolleysController),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             CustomButton(
               text: 'Add Seller',
               onPressed: _addSeller,

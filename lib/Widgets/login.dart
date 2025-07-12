@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:project/Widgets/home.dart';
 import 'package:project/Widgets/signup.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -16,13 +16,47 @@ class _SignInScreenState extends State<SignInScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _rollController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref().child('users');
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   bool _loading = false;
   bool _obscureText = true;
-  bool _rememberMe = false;
+  bool _rememberMe = true;
   String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkUserLoggedIn();
+  }
+
+  // Check if user is already logged in
+  Future<void> _checkUserLoggedIn() async {
+    setState(() => _loading = true);
+
+    try {
+      final user = _auth.currentUser;
+      if (user != null) {
+        // User is already authenticated, navigate to home
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HomePage()),
+        );
+      }
+    } catch (e) {
+      print('Error checking login status: $e');
+    } finally {
+      setState(() => _loading = false);
+    }
+  }
+
+  // Save user login data
+  Future<void> _saveLoginData(String roll) async {
+    if (_rememberMe) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('userRoll', roll);
+    }
+  }
 
   Future<void> _signIn() async {
     if (!_formKey.currentState!.validate()) return;
@@ -36,22 +70,59 @@ class _SignInScreenState extends State<SignInScreen> {
       final roll = _rollController.text.trim();
       final pass = _passwordController.text.trim();
 
-      // Fetch user doc by roll number (assumed as document ID)
+      // First, fetch user doc by roll number to get email
       final doc = await _firestore.collection('users').doc(roll).get();
 
       if (!doc.exists) {
         setState(() => _errorMessage = "Incorrect Roll Number");
-      } else {
-        final userData = doc.data()!;
-        if (userData['password'] == pass) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (_) => const HomePage()),
-          );
-        } else {
-          setState(() => _errorMessage = "Incorrect Password");
-        }
+        return;
       }
+
+      final userData = doc.data()!;
+
+      // Check if password matches (you should hash passwords in production)
+      if (userData['password'] != pass) {
+        setState(() => _errorMessage = "Incorrect Password");
+        return;
+      }
+
+      // Get email from user data
+      final email = userData['email'] as String;
+
+      // Sign in with Firebase Authentication
+      await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: pass,
+      );
+
+      // Save login data
+      await _saveLoginData(roll);
+
+      // Navigate to home
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const HomePage()),
+      );
+
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        switch (e.code) {
+          case 'user-not-found':
+            _errorMessage = "No user found for this email.";
+            break;
+          case 'wrong-password':
+            _errorMessage = "Wrong password provided.";
+            break;
+          case 'invalid-email':
+            _errorMessage = "Invalid email address.";
+            break;
+          case 'user-disabled':
+            _errorMessage = "This user account has been disabled.";
+            break;
+          default:
+            _errorMessage = "Authentication failed. Please try again.";
+        }
+      });
     } catch (e) {
       print('Exception details: $e');
       setState(() => _errorMessage = "Something went wrong. Please try again.");
@@ -62,13 +133,36 @@ class _SignInScreenState extends State<SignInScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Show loading screen while checking saved credentials
+    if (_loading && _rollController.text.isEmpty) {
+      return Scaffold(
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF0A0A0A), // Deep black
+                Color(0xFF1A1A2E), // Dark navy
+                Color(0xFF16213E),],
+            ),
+          ),
+          child: const Center(
+            child: CircularProgressIndicator(color: Colors.white),
+          ),
+        ),
+      );
+    }
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFF4E5FE8), Color(0xFFE7D7F6)],
+            colors: [
+              Color(0xFF0A0A0A), // Deep black
+              Color(0xFF1A1A2E), // Dark navy
+              Color(0xFF16213E),],
           ),
         ),
         child: SafeArea(
@@ -93,7 +187,7 @@ class _SignInScreenState extends State<SignInScreen> {
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF6778E8),
+                              color: const Color(0xFF16213E),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Icon(
@@ -234,7 +328,7 @@ class _SignInScreenState extends State<SignInScreen> {
                             child: ElevatedButton(
                               onPressed: _loading ? null : _signIn,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue,
+                                backgroundColor: const Color(0xFF16213E),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
                                 ),

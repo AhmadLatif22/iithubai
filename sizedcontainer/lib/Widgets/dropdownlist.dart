@@ -14,13 +14,13 @@ class _DropDownWidgetState extends State<DropDownWidget> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Drop Down List'),
+        title: const Text('Drop Down List'),
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            margin: EdgeInsets.all(160),
+            margin: const EdgeInsets.all(160),
             height: 70,
             width: MediaQuery.of(context).size.width,
             color: Theme.of(context).primaryColor,
@@ -28,7 +28,7 @@ class _DropDownWidgetState extends State<DropDownWidget> {
               child: DropdownButton<String>(
                 dropdownColor: Colors.grey,
                 isExpanded: true,
-                icon: Icon(Icons.arrow_circle_down_outlined),
+                icon: const Icon(Icons.arrow_circle_down_outlined),
                 value: selectedValue, // Display the selected value
                 items: <String>[
                   'Orange',
